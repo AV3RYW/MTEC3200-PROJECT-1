@@ -34,6 +34,7 @@ const initialAlarm: AlarmSettings = {
   time: "07:00",
   repeatDays: [],
   difficulty: "medium",
+  puzzleCount: 1,
   enabled: true,
 };
 
@@ -237,6 +238,45 @@ export default function SettingsScreen() {
                         {option.description}
                       </span>
                     </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="text-sm font-semibold">
+              Puzzles to solve
+            </legend>
+            <p className="mt-1 text-sm leading-5 text-slate-600">
+              Choose how many different puzzles you&apos;ll solve before you can
+              dismiss the alarm.
+            </p>
+            <div className="mt-3 grid grid-cols-5 gap-2">
+              {[1, 2, 3, 4, 5].map((count) => {
+                const selected = alarm.puzzleCount === count;
+                return (
+                  <label
+                    key={count}
+                    className={`flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border text-sm font-semibold transition focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-slate-900 ${
+                      selected
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-900/15 bg-white/75 text-slate-800 hover:bg-white"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="puzzle-count"
+                      value={count}
+                      aria-label={`${count} ${count === 1 ? "puzzle" : "puzzles"}`}
+                      checked={selected}
+                      onChange={() => {
+                        setAlarm({ ...alarm, puzzleCount: count });
+                        setSaveMessage("");
+                      }}
+                      className="size-4 accent-amber-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                    />
+                    {count}
                   </label>
                 );
               })}

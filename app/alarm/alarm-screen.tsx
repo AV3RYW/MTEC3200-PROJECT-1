@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ACTIVE_ALARM_UPDATED_EVENT,
   type ActiveAlarm,
@@ -10,6 +10,7 @@ import {
   finishActiveAlarm,
   readActiveAlarm,
   readAlarmResult,
+  saveActiveAlarm,
 } from "@/lib/alarm";
 
 const puzzles: Record<
@@ -18,169 +19,157 @@ const puzzles: Record<
     prompt: string;
     hint: string;
     answer: string;
-    placeholder: string;
+    options: string[];
   }[]
 > = {
   easy: [
     {
-      prompt: "I have a face and two hands, but no arms or legs. What am I?",
-      hint: "You can use me to check the time.",
-      answer: "clock",
-      placeholder: "Type your answer",
+      prompt: "What comes next? ●, ■, ●, ■, …",
+      hint: "The two shapes take turns.",
+      answer: "●",
+      options: ["●", "▲", "■"],
     },
     {
-      prompt: "What has keys but no locks, and space but no room?",
-      hint: "You might use one to type a message.",
-      answer: "keyboard",
-      placeholder: "Type your answer",
+      prompt: "Complete the pattern: ▲, ▲, ●, ▲, ▲, ●, …",
+      hint: "The same group of three repeats.",
+      answer: "▲",
+      options: ["▲", "●", "■"],
     },
     {
-      prompt: "What gets wetter the more it dries?",
-      hint: "You might reach for one after a shower.",
-      answer: "towel",
-      placeholder: "Type your answer",
+      prompt: "Which number comes next? 1, 2, 1, 2, 1, …",
+      hint: "The two numbers alternate.",
+      answer: "2",
+      options: ["1", "2", "3"],
     },
     {
-      prompt: "What has to be broken before you can use it?",
-      hint: "It often comes in a carton and is used for breakfast.",
-      answer: "egg",
-      placeholder: "Type your answer",
+      prompt: "What completes the pattern? ○, △, □, ○, △, …",
+      hint: "The three shapes repeat in order.",
+      answer: "□",
+      options: ["○", "△", "□"],
     },
     {
-      prompt: "What has a neck but no head?",
-      hint: "You might fill it with water.",
-      answer: "bottle",
-      placeholder: "Type your answer",
+      prompt: "Which number comes next? 2, 4, 6, 8, …",
+      hint: "Add the same amount each time.",
+      answer: "10",
+      options: ["9", "10", "12"],
     },
     {
-      prompt: "What has many teeth but cannot bite?",
-      hint: "You might use it to tidy your hair.",
-      answer: "comb",
-      placeholder: "Type your answer",
+      prompt: "Complete the pattern: A, B, A, B, A, …",
+      hint: "The two letters alternate.",
+      answer: "B",
+      options: ["A", "B", "C"],
     },
     {
-      prompt: "What can travel around the world while staying in one corner?",
-      hint: "You might stick it on an envelope.",
-      answer: "stamp",
-      placeholder: "Type your answer",
+      prompt: "What comes next? ↑, →, ↑, →, …",
+      hint: "The arrows alternate directions.",
+      answer: "↑",
+      options: ["↑", "→", "↓"],
     },
     {
-      prompt: "What goes up but never comes back down?",
-      hint: "You get one year older each time it increases.",
-      answer: "age",
-      placeholder: "Type your answer",
+      prompt: "Which number comes next? 3, 3, 4, 3, 3, 4, 3, …",
+      hint: "A group of three numbers repeats.",
+      answer: "3",
+      options: ["3", "4", "5"],
     },
   ],
   medium: [
     {
-      prompt: "What number comes next in this pattern? 4, 8, 16, 32, ...",
-      hint: "Each number is multiplied by the same amount.",
+      prompt: "Which number comes next? 4, 8, 16, 32, …",
+      hint: "Each number is multiplied by two.",
       answer: "64",
-      placeholder: "Enter a number",
+      options: ["48", "56", "64", "66"],
     },
     {
-      prompt: "What number comes next? 3, 6, 11, 18, 27, ...",
-      hint: "Look at how much is added each time.",
+      prompt: "Complete the pattern: 3, 6, 11, 18, 27, …",
+      hint: "The amount added increases by two each time.",
       answer: "38",
-      placeholder: "Enter a number",
+      options: ["36", "37", "38", "39"],
     },
     {
-      prompt:
-        "A farmer has 12 eggs. All but 4 hatch. How many eggs are left?",
-      hint: "Hatching doesn’t make an egg disappear.",
-      answer: "12",
-      placeholder: "Enter a number",
+      prompt: "What comes next? 1, 4, 9, 16, …",
+      hint: "These are square numbers.",
+      answer: "25",
+      options: ["20", "24", "25", "32"],
     },
     {
-      prompt: "What number comes next? 2, 6, 12, 20, 30, ...",
-      hint: "The amount added increases by 2 each time.",
+      prompt: "Which number is missing? 2, 6, 12, 20, 30, …",
+      hint: "The amount added increases by two each time.",
       answer: "42",
-      placeholder: "Enter a number",
+      options: ["38", "40", "42", "44"],
     },
     {
-      prompt:
-        "If 5 machines make 5 toys in 5 minutes, how many toys do 100 machines make in 5 minutes?",
-      hint: "Each machine makes one toy in five minutes.",
-      answer: "100",
-      placeholder: "Enter a number",
-    },
-    {
-      prompt:
-        "A book has 120 pages. If you read 15 pages each day, how many days will it take to finish?",
-      hint: "Divide the total pages by the pages read each day.",
-      answer: "8",
-      placeholder: "Enter a number",
-    },
-    {
-      prompt: "What number is missing? 81, 27, 9, 3, ...",
-      hint: "Each number is divided by the same amount.",
+      prompt: "Complete the pattern: 81, 27, 9, 3, …",
+      hint: "Each number is divided by three.",
       answer: "1",
-      placeholder: "Enter a number",
+      options: ["0", "1", "2", "3"],
     },
     {
-      prompt:
-        "A movie starts at 2:35 PM and lasts 1 hour 45 minutes. What time does it end?",
-      hint: "Add one hour, then add another 45 minutes.",
-      answer: "4:20 pm|4:20pm",
-      placeholder: "Enter the time",
+      prompt: "What comes next? 5, 10, 20, 40, …",
+      hint: "Each number is multiplied by the same amount.",
+      answer: "80",
+      options: ["60", "70", "80", "100"],
+    },
+    {
+      prompt: "Which number comes next? 2, 5, 10, 17, 26, …",
+      hint: "The amounts added are 3, 5, 7, and 9.",
+      answer: "37",
+      options: ["35", "36", "37", "38"],
+    },
+    {
+      prompt: "Complete the pattern: 1, 1, 2, 3, 5, 8, …",
+      hint: "Add the previous two numbers to get the next one.",
+      answer: "13",
+      options: ["11", "12", "13", "15"],
     },
   ],
   hard: [
     {
-      prompt:
-        "I am a three-digit number. My tens digit is 5 more than my ones digit. My hundreds digit is 8 less than my tens digit. My digits add up to 14. What number am I?",
-      hint: "Write the digits as hundreds, tens, and ones.",
-      answer: "194",
-      placeholder: "Enter the three-digit number",
+      prompt: "Which number comes next? 2, 3, 5, 9, 17, …",
+      hint: "Look at the amount added each time.",
+      answer: "33",
+      options: ["25", "31", "33", "34"],
     },
     {
-      prompt:
-        "I am a two-digit number. My tens digit is three times my ones digit, and my digits add up to 12. What number am I?",
-      hint: "The two digits add to 12, and the tens digit is three times the ones digit.",
-      answer: "93",
-      placeholder: "Enter the two-digit number",
+      prompt: "Complete the pattern: 1, 2, 6, 24, 120, …",
+      hint: "Each step multiplies by the next whole number.",
+      answer: "720",
+      options: ["600", "620", "720", "840"],
     },
     {
-      prompt:
-        "A snail climbs 3 feet up a 10-foot wall each day, then slips 2 feet overnight. How many days does it take to reach the top?",
-      hint: "On the final day, it won’t slide back after reaching the top.",
-      answer: "8",
-      placeholder: "Enter the number of days",
+      prompt: "What comes next? 2, 5, 11, 23, 47, …",
+      hint: "Multiply by two, then add one.",
+      answer: "95",
+      options: ["93", "94", "95", "97"],
     },
     {
-      prompt:
-        "Reversing the digits of a two-digit number makes it 27 larger. Its digits add up to 9. What is the original number?",
-      hint: "The reversed number is 27 greater, and the two digits total 9.",
-      answer: "36",
-      placeholder: "Enter the original number",
+      prompt: "Which number is missing? 3, 8, 18, 38, 78, …",
+      hint: "The same operation is used at each step.",
+      answer: "158",
+      options: ["148", "156", "158", "160"],
     },
     {
-      prompt:
-        "Three consecutive whole numbers add up to 72. What is the middle number?",
-      hint: "The middle number is the average of the three.",
-      answer: "24",
-      placeholder: "Enter a number",
+      prompt: "Complete the pattern: 1, 4, 10, 22, 46, …",
+      hint: "Multiply by two, then add two.",
+      answer: "94",
+      options: ["90", "92", "94", "96"],
     },
     {
-      prompt:
-        "A drawer has 4 black socks and 4 blue socks. How many socks must you take in the dark to guarantee a matching-color pair?",
-      hint: "Think about the worst case after taking two socks.",
-      answer: "3",
-      placeholder: "Enter a number",
+      prompt: "What comes next? 6, 12, 21, 33, 48, …",
+      hint: "The amount added increases by three each time.",
+      answer: "66",
+      options: ["63", "64", "66", "69"],
     },
     {
-      prompt:
-        "A clock loses 10 minutes every real hour. It is set correctly at noon. What time will it show after 6 real hours?",
-      hint: "In 6 hours it loses a total of 60 minutes.",
-      answer: "5 pm|5pm",
-      placeholder: "Enter the time",
+      prompt: "Which number comes next? 1, 8, 27, 64, …",
+      hint: "Each number is a whole number raised to the third power.",
+      answer: "125",
+      options: ["100", "121", "125", "128"],
     },
     {
-      prompt:
-        "One of 8 identical-looking balls is heavier. What is the fewest number of balance-scale weighings needed to guarantee you find it?",
-      hint: "Split the balls into groups and compare equal-sized groups.",
-      answer: "2",
-      placeholder: "Enter a number",
+      prompt: "Complete the pattern: 2, 3, 5, 8, 12, 17, …",
+      hint: "The amount added increases by one each time.",
+      answer: "23",
+      options: ["21", "22", "23", "24"],
     },
   ],
 };
@@ -195,22 +184,25 @@ function formatTime(value: string): string {
   }).format(date);
 }
 
+function chooseRandomPuzzleIndex(indexes: number[]): number {
+  return indexes[Math.floor(Math.random() * indexes.length)];
+}
+
 export default function AlarmScreen() {
   const [activeAlarm, setActiveAlarm] = useState<ActiveAlarm | null>(null);
   const [result, setResult] = useState<AlarmResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [showStopConfirmation, setShowStopConfirmation] = useState(false);
   const [showPuzzlePreview, setShowPuzzlePreview] = useState(false);
   const [previewPuzzleIndex, setPreviewPuzzleIndex] = useState(0);
+  const [previewFeedback, setPreviewFeedback] = useState("");
   const [soundMessage, setSoundMessage] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundIntervalRef = useRef<number | null>(null);
-  const firstFieldRef = useRef<HTMLInputElement>(null);
+  const firstOptionRef = useRef<HTMLButtonElement>(null);
 
   const stopSound = useCallback(() => {
     if (soundIntervalRef.current !== null) {
@@ -296,33 +288,59 @@ export default function AlarmScreen() {
     };
   }, []);
 
+  const activeScheduledFor = activeAlarm?.scheduledFor;
+  const activePuzzleIndex = activeAlarm?.currentPuzzleIndex;
+
   useEffect(() => {
-    if (!activeAlarm) return;
+    if (!activeScheduledFor) return;
 
     const activationId = window.setTimeout(() => {
       void startSound();
-      firstFieldRef.current?.focus();
     }, 0);
     return () => {
       window.clearTimeout(activationId);
       stopSound();
     };
-  }, [activeAlarm, startSound, stopSound]);
+  }, [activeScheduledFor, startSound, stopSound]);
 
-  function handleAnswer(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    if (activePuzzleIndex !== undefined) firstOptionRef.current?.focus();
+  }, [activePuzzleIndex]);
+
+  function handleAnswer(selectedAnswer: string) {
     if (!activeAlarm) return;
 
-    const normalizedAnswer = answer
-      .trim()
-      .toLocaleLowerCase()
-      .replace(/[.!?]+$/g, "")
-      .replace(/\s+/g, " ");
-    const acceptedAnswers = currentPuzzle?.answer
-      .split("|")
-      .map((acceptedAnswer) => acceptedAnswer.trim().toLocaleLowerCase());
-    if (!acceptedAnswers?.includes(normalizedAnswer)) {
+    if (selectedAnswer !== currentPuzzle?.answer) {
       setFeedback("That answer isn’t quite right. Try again.");
+      return;
+    }
+
+    const solvedPuzzleIndexes = [
+      ...activeAlarm.solvedPuzzleIndexes,
+      activeAlarm.currentPuzzleIndex,
+    ];
+
+    if (solvedPuzzleIndexes.length < activeAlarm.puzzleCount) {
+      const availableIndexes = puzzles[activeAlarm.difficulty]
+        .map((_, index) => index)
+        .filter((index) => !solvedPuzzleIndexes.includes(index));
+      const nextIndex = chooseRandomPuzzleIndex(availableIndexes);
+
+      try {
+        saveActiveAlarm({
+          ...activeAlarm,
+          currentPuzzleIndex: nextIndex,
+          solvedPuzzleIndexes,
+        });
+        setFeedback(
+          `${solvedPuzzleIndexes.length} of ${activeAlarm.puzzleCount} puzzles solved. Keep going.`,
+        );
+        setShowStopConfirmation(false);
+      } catch {
+        setFeedback(
+          "Your progress could not be saved because browser storage is unavailable. Try again or use the emergency stop.",
+        );
+      }
       return;
     }
 
@@ -348,15 +366,33 @@ export default function AlarmScreen() {
 
     const availableIndexes = puzzles[activeAlarm.difficulty]
       .map((_, index) => index)
-      .filter((index) => index !== puzzleIndex);
-    const nextIndex =
-      availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
+      .filter(
+        (index) =>
+          index !== activeAlarm.currentPuzzleIndex &&
+          !activeAlarm.solvedPuzzleIndexes.includes(index),
+      );
+    const nextIndex = chooseRandomPuzzleIndex(availableIndexes);
 
-    setPuzzleIndex(nextIndex);
-    setAnswer("");
-    setFeedback("");
-    setShowStopConfirmation(false);
-    firstFieldRef.current?.focus();
+    try {
+      saveActiveAlarm({
+        ...activeAlarm,
+        currentPuzzleIndex: nextIndex,
+      });
+      setFeedback("");
+      setShowStopConfirmation(false);
+    } catch {
+      setFeedback(
+        "A new puzzle could not be loaded because browser storage is unavailable.",
+      );
+    }
+  }
+
+  function handlePreviewAnswer(selectedAnswer: string) {
+    setPreviewFeedback(
+      selectedAnswer === previewPuzzle.answer
+        ? "That’s right! This is only a preview, so the alarm stays unchanged."
+        : "Not quite. Try another choice.",
+    );
   }
 
   function handleEmergencyStop() {
@@ -379,7 +415,7 @@ export default function AlarmScreen() {
   }
 
   const currentPuzzle = activeAlarm
-    ? puzzles[activeAlarm.difficulty][puzzleIndex]
+    ? puzzles[activeAlarm.difficulty][activeAlarm.currentPuzzleIndex]
     : null;
   const previewPuzzle = puzzles.medium[previewPuzzleIndex];
 
@@ -435,7 +471,9 @@ export default function AlarmScreen() {
                 {formatTime(activeAlarm.time)}
               </p>
               <p className="mt-3 text-sm text-white/65">
-                Solve the puzzle to dismiss your alarm.
+                Solve {activeAlarm.puzzleCount}{" "}
+                {activeAlarm.puzzleCount === 1 ? "puzzle" : "puzzles"} to
+                dismiss your alarm.
               </p>
             </div>
 
@@ -476,9 +514,12 @@ export default function AlarmScreen() {
               <p className="mt-3 text-sm leading-6 text-white/65">
                 Need a nudge? {currentPuzzle.hint}
               </p>
+              <p className="mt-4 text-sm font-medium text-white/80">
+                Tap an answer:
+              </p>
               <p className="mt-2 text-xs text-white/45">
-                {puzzleIndex + 1} of {puzzles[activeAlarm.difficulty].length}{" "}
-                puzzles at this difficulty
+                {activeAlarm.solvedPuzzleIndexes.length} of{" "}
+                {activeAlarm.puzzleCount} puzzles solved
               </p>
               <button
                 type="button"
@@ -488,36 +529,24 @@ export default function AlarmScreen() {
                 Try another puzzle
               </button>
 
-              <form onSubmit={handleAnswer} className="mt-7">
-                <label
-                  htmlFor="puzzle-answer"
-                  className="mb-2 block text-sm font-medium text-white/80"
-                >
-                  Your answer
-                </label>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <input
-                    ref={firstFieldRef}
-                    id="puzzle-answer"
-                    name="answer"
-                    value={answer}
-                    onChange={(event) => {
-                      setAnswer(event.target.value);
-                      setFeedback("");
-                    }}
-                    autoComplete="off"
-                    required
-                    placeholder={currentPuzzle.placeholder}
-                    className="min-h-12 min-w-0 flex-1 rounded-2xl border border-white/20 bg-slate-950/50 px-4 text-base text-white placeholder:text-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
-                  />
+              <div
+                role="group"
+                aria-label="Choose the answer that completes the pattern"
+                className="mt-3 grid grid-cols-2 gap-3"
+              >
+                {currentPuzzle.options.map((option, index) => (
                   <button
-                    type="submit"
-                    className="min-h-12 rounded-2xl bg-amber-200 px-6 text-sm font-semibold text-slate-950 transition hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-200"
+                    key={option}
+                    ref={index === 0 ? firstOptionRef : undefined}
+                    type="button"
+                    onClick={() => handleAnswer(option)}
+                    aria-label={`Answer ${index + 1}: ${option}`}
+                    className="min-h-16 touch-manipulation rounded-2xl border border-white/20 bg-slate-950/50 px-4 py-3 text-xl font-semibold text-white transition hover:border-amber-200/70 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 sm:min-h-20 sm:text-2xl"
                   >
-                    Check answer
+                    {option}
                   </button>
-                </div>
-              </form>
+                ))}
+              </div>
 
               {feedback && (
                 <p
@@ -632,12 +661,13 @@ export default function AlarmScreen() {
                 </p>
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     setPreviewPuzzleIndex(
                       (currentIndex) =>
                         (currentIndex + 1) % puzzles.medium.length,
-                    )
-                  }
+                    );
+                    setPreviewFeedback("");
+                  }}
                   className="mt-4 min-h-10 rounded-full border border-white/20 px-4 text-sm font-medium text-white/80 transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   Try another puzzle
@@ -652,30 +682,35 @@ export default function AlarmScreen() {
                 <p className="mt-3 text-sm leading-6 text-white/65">
                   Need a nudge? {previewPuzzle.hint}
                 </p>
-                <div className="mt-7">
-                  <label
-                    htmlFor="puzzle-preview-answer"
-                    className="mb-2 block text-sm font-medium text-white/80"
-                  >
-                    Your answer
-                  </label>
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <input
-                      id="puzzle-preview-answer"
-                      type="text"
-                      disabled
-                      placeholder={previewPuzzle.placeholder}
-                      className="min-h-12 min-w-0 flex-1 rounded-2xl border border-white/20 bg-slate-950/50 px-4 text-base text-white placeholder:text-white/35 disabled:cursor-not-allowed disabled:opacity-70"
-                    />
+                <p className="mt-4 text-sm font-medium text-white/80">
+                  Tap an answer:
+                </p>
+                <div
+                  role="group"
+                  aria-label="Choose the answer that completes the pattern"
+                  className="mt-3 grid grid-cols-2 gap-3"
+                >
+                  {previewPuzzle.options.map((option, index) => (
                     <button
+                      key={option}
                       type="button"
-                      disabled
-                      className="min-h-12 rounded-2xl bg-amber-200 px-6 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-70"
+                      onClick={() => handlePreviewAnswer(option)}
+                      aria-label={`Answer ${index + 1}: ${option}`}
+                      className="min-h-16 touch-manipulation rounded-2xl border border-white/20 bg-slate-950/50 px-4 py-3 text-xl font-semibold text-white transition hover:border-amber-200/70 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200 sm:min-h-20 sm:text-2xl"
                     >
-                      Check answer
+                      {option}
                     </button>
-                  </div>
+                  ))}
                 </div>
+                {previewFeedback && (
+                  <p
+                    role="status"
+                    aria-live="polite"
+                    className="mt-4 rounded-xl bg-white/10 px-4 py-3 text-sm leading-6 text-amber-100"
+                  >
+                    {previewFeedback}
+                  </p>
+                )}
                 <p className="mt-4 text-xs leading-5 text-white/50">
                   Preview only — this won&apos;t start or dismiss an alarm.
                 </p>

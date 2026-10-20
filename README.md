@@ -1,4 +1,5 @@
-# Puzzle Alarm
+# Puzzle Alarm 
+https://puzzle-clock.vercel.app/alarm
 
 An early-stage browser-based alarm project. The product requirements are in [`PRD.md`](./PRD.md), and supporting research is in [`docs/research/`](./docs/research/).
 

@@ -11,6 +11,9 @@ export type ActiveAlarm = {
   scheduledFor: string;
   time: string;
   difficulty: PuzzleDifficulty;
+  puzzleCount: number;
+  currentPuzzleIndex: number;
+  solvedPuzzleIndexes: number[];
 };
 
 export type AlarmResult = {
@@ -24,14 +27,37 @@ export type AlarmSettings = {
   time: string;
   repeatDays: number[];
   difficulty: PuzzleDifficulty;
+  puzzleCount: number;
   enabled: boolean;
+};
+
+type StoredAlarmSettings = Omit<AlarmSettings, "puzzleCount"> & {
+  puzzleCount?: number;
 };
 
 function isPuzzleDifficulty(value: unknown): value is PuzzleDifficulty {
   return value === "easy" || value === "medium" || value === "hard";
 }
 
-function isAlarmSettings(value: unknown): value is AlarmSettings {
+function isPuzzleCount(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 5
+  );
+}
+
+function isPuzzleIndex(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= 7
+  );
+}
+
+function isAlarmSettings(value: unknown): value is StoredAlarmSettings {
   if (typeof value !== "object" || value === null) return false;
 
   const alarm = value as Record<string, unknown>;
@@ -49,6 +75,7 @@ function isAlarmSettings(value: unknown): value is AlarmSettings {
     ) &&
     new Set(alarm.repeatDays).size === alarm.repeatDays.length &&
     isPuzzleDifficulty(alarm.difficulty) &&
+    (alarm.puzzleCount === undefined || isPuzzleCount(alarm.puzzleCount)) &&
     typeof alarm.enabled === "boolean"
   );
 }
@@ -62,7 +89,7 @@ export function readAlarmSettings(): AlarmSettings | null {
     throw new Error("Saved alarm settings are not in a valid format.");
   }
 
-  return parsedValue;
+  return { ...parsedValue, puzzleCount: parsedValue.puzzleCount ?? 1 };
 }
 
 export function readActiveAlarm(): ActiveAlarm | null {
@@ -85,10 +112,34 @@ export function readActiveAlarm(): ActiveAlarm | null {
     throw new Error("The active alarm is not in a valid format.");
   }
 
+  const storedAlarm = parsedValue as Record<string, unknown>;
+  if (
+    (storedAlarm.puzzleCount !== undefined &&
+      !isPuzzleCount(storedAlarm.puzzleCount)) ||
+    (storedAlarm.currentPuzzleIndex !== undefined &&
+      !isPuzzleIndex(storedAlarm.currentPuzzleIndex)) ||
+    (storedAlarm.solvedPuzzleIndexes !== undefined &&
+      (!Array.isArray(storedAlarm.solvedPuzzleIndexes) ||
+        !storedAlarm.solvedPuzzleIndexes.every(isPuzzleIndex) ||
+        new Set(storedAlarm.solvedPuzzleIndexes).size !==
+          storedAlarm.solvedPuzzleIndexes.length))
+  ) {
+    throw new Error("The active alarm is not in a valid format.");
+  }
+
   return {
     scheduledFor: parsedValue.scheduledFor,
     time: parsedValue.time,
     difficulty: parsedValue.difficulty,
+    puzzleCount: isPuzzleCount(storedAlarm.puzzleCount)
+      ? storedAlarm.puzzleCount
+      : 1,
+    currentPuzzleIndex: isPuzzleIndex(storedAlarm.currentPuzzleIndex)
+      ? storedAlarm.currentPuzzleIndex
+      : 0,
+    solvedPuzzleIndexes: Array.isArray(storedAlarm.solvedPuzzleIndexes)
+      ? storedAlarm.solvedPuzzleIndexes.filter(isPuzzleIndex)
+      : [],
   };
 }
 

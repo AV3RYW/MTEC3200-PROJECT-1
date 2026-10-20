@@ -64,6 +64,9 @@ export default function AlarmController() {
           scheduledFor,
           time: settings.time,
           difficulty: settings.difficulty,
+          puzzleCount: settings.puzzleCount,
+          currentPuzzleIndex: 0,
+          solvedPuzzleIndexes: [],
         };
 
         window.localStorage.setItem(

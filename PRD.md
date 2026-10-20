@@ -64,14 +64,16 @@ The app has three primary views: a home screen, alarm settings, and the active a
 - Let the user set an alarm time.
 - Let the user choose which days it repeats; a one-time alarm may be represented by selecting no repeat days.
 - Let the user choose a puzzle difficulty: easy, medium, or hard.
+- Let the user choose how many puzzles, from one to five, must be solved to dismiss the alarm.
 - Let the user save, edit, enable, and disable the alarm.
 - Explain that the browser must be open and the device available for the web MVP to trigger the alarm.
 
 ### 3. Active alarm and puzzle
 
 - At the configured time, show the alarm screen and play an alarm sound when browser policies allow it.
-- Present a puzzle at the selected difficulty and accept an answer.
-- Keep the alarm active after an incorrect answer and provide a way to try again.
+- Present a pattern-recognition puzzle at the selected difficulty with large answer choices that work by touch and keyboard.
+- Keep the alarm active after an incorrect answer and require the configured number of different puzzles to be solved.
+- Save puzzle progress during a ringing alarm so refreshing does not reset completed puzzles.
 - Stop the alarm only after a correct answer or an explicit emergency stop action. The emergency stop must be available for usability and safety; using it should count as not completing the puzzle for the on-time result.
 - After dismissal, show a brief, non-judgmental message indicating whether the alarm was dismissed within the MVP's on-time window.
 
@@ -79,7 +81,9 @@ The app has three primary views: a home screen, alarm settings, and the active a
 
 - Alarm settings persist after the user refreshes or reopens the same browser.
 - The selected time and repeat days are displayed clearly before saving.
-- A ringing alarm cannot be dismissed by tapping outside the puzzle or submitting an incorrect answer.
+- A ringing alarm cannot be dismissed by tapping outside the puzzle or selecting an incorrect answer.
+- Pattern answers can be selected with large touch targets or keyboard-accessible buttons.
+- The configured puzzle count persists with alarm settings, and the active alarm tracks completed puzzles until the required count is reached.
 - Correct and incorrect answers produce distinct, understandable feedback.
 - The user can stop the alarm without solving if necessary.
 - Alarm, settings, and puzzle screens can be used on a narrow mobile viewport and with keyboard navigation.
@@ -115,6 +119,5 @@ The app has three primary views: a home screen, alarm settings, and the active a
 - Is a browser-based alarm sufficient for the first MVP, or must it work when the browser is closed or the device is locked? Reliable background alarms may require a native app or platform-specific capabilities.
 - What is the default on-time window after the scheduled alarm time? A prototype can start with five minutes and validate this with users.
 - Should the MVP support multiple alarms, or is one alarm enough to test the core behavior?
-- What puzzle types and answer formats are understandable immediately after waking (for example, arithmetic, pattern recognition, or word puzzles)?
 - Should users be able to change or silence the alarm sound?
 - What visual style and product name should be used?

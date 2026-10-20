@@ -193,6 +193,9 @@ export default function HomeScreen() {
                 {alarm.enabled && nextAlarmDate
                   ? `${nextAlarmDay} · ${formatRepeatDays(alarm.repeatDays)}`
                   : `${alarmTime} · ${formatRepeatDays(alarm.repeatDays)}`}
+                {` · ${alarm.puzzleCount} ${
+                  alarm.puzzleCount === 1 ? "puzzle" : "puzzles"
+                }`}
               </p>
               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] opacity-55">
                 {alarm.enabled ? "Enabled" : "Disabled"}
