@@ -10,45 +10,6 @@ import {
   readAlarmSettings,
 } from "@/lib/alarm";
 
-type TimeOfDay = "morning" | "day" | "evening" | "night";
-
-const palettes: Record<
-  TimeOfDay,
-  { background: string; glow: string; foreground: string; card: string }
-> = {
-  morning: {
-    background: "from-amber-100 via-orange-50 to-rose-100",
-    glow: "bg-orange-300/30",
-    foreground: "text-slate-900",
-    card: "border-white/70 bg-white/60",
-  },
-  day: {
-    background: "from-sky-100 via-blue-50 to-cyan-100",
-    glow: "bg-sky-300/30",
-    foreground: "text-slate-900",
-    card: "border-white/70 bg-white/60",
-  },
-  evening: {
-    background: "from-rose-100 via-orange-50 to-amber-100",
-    glow: "bg-rose-300/30",
-    foreground: "text-slate-900",
-    card: "border-white/70 bg-white/60",
-  },
-  night: {
-    background: "from-slate-950 via-indigo-950 to-slate-900",
-    glow: "bg-indigo-500/20",
-    foreground: "text-slate-50",
-    card: "border-white/10 bg-white/5",
-  },
-};
-
-function getTimeOfDay(hour: number): TimeOfDay {
-  if (hour >= 5 && hour < 10) return "morning";
-  if (hour >= 10 && hour < 17) return "day";
-  if (hour >= 17 && hour < 20) return "evening";
-  return "night";
-}
-
 export default function HomeScreen() {
   const [now, setNow] = useState<Date | null>(null);
   const [alarm, setAlarm] = useState<AlarmSettings | null>(null);
@@ -79,7 +40,6 @@ export default function HomeScreen() {
     };
   }, []);
 
-  const palette = palettes[getTimeOfDay(now?.getHours() ?? 12)];
   const nextAlarmDate =
     alarm && now ? getNextAlarmDate(alarm, now) : null;
   const alarmTime = alarm
@@ -108,18 +68,7 @@ export default function HomeScreen() {
     : "Your local time";
 
   return (
-    <main
-      className={`relative isolate flex min-h-svh flex-col overflow-hidden bg-gradient-to-br ${palette.background} ${palette.foreground} transition-colors duration-1000`}
-    >
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute -left-32 top-1/4 -z-10 size-96 rounded-full ${palette.glow} blur-3xl`}
-      />
-      <div
-        aria-hidden="true"
-        className={`pointer-events-none absolute -bottom-48 -right-24 -z-10 size-[30rem] rounded-full ${palette.glow} blur-3xl`}
-      />
-
+    <main className="relative flex min-h-svh flex-col overflow-hidden text-slate-50">
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-10 sm:py-8">
         <div className="flex items-center gap-3" aria-label="Puzzle Alarm home">
           <span
@@ -136,21 +85,8 @@ export default function HomeScreen() {
         <Link
           href="/settings"
           aria-label="Alarm settings"
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-current/15 bg-white/30 px-4 text-sm font-medium backdrop-blur transition hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+          className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 text-sm font-medium backdrop-blur transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
         >
-          <svg
-            aria-hidden="true"
-            className="size-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
-            <path d="m19.4 15 .1.1a1.7 1.7 0 0 1-2.4 2.4l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a1.7 1.7 0 0 1-3.4 0v-.2a1.7 1.7 0 0 0-2.9-1.2l-.1.1a1.7 1.7 0 0 1-2.4-2.4l.1-.1a1.7 1.7 0 0 0-1.2-2.9H4a1.7 1.7 0 0 1 0-3.4h.2a1.7 1.7 0 0 0 1.2-2.9l-.1-.1a1.7 1.7 0 0 1 2.4-2.4l.1.1a1.7 1.7 0 0 0 2.9-1.2V2a1.7 1.7 0 0 1 3.4 0v.2a1.7 1.7 0 0 0 2.9 1.2l.1-.1a1.7 1.7 0 0 1 2.4 2.4l-.1.1a1.7 1.7 0 0 0 1.2 2.9h.2a1.7 1.7 0 0 1 0 3.4h-.2a1.7 1.7 0 0 0-1.2 2.9Z" />
-          </svg>
           <span>Settings</span>
         </Link>
       </header>
@@ -175,7 +111,7 @@ export default function HomeScreen() {
         </p>
 
         <div
-          className={`mt-12 w-full max-w-sm rounded-3xl border px-6 py-5 text-left shadow-sm backdrop-blur-md sm:mt-16 ${palette.card}`}
+          className="mt-12 w-full max-w-sm rounded-3xl border border-white/15 bg-slate-950/35 px-6 py-5 text-left shadow-sm backdrop-blur-md sm:mt-16"
         >
           <p className="text-xs font-semibold uppercase tracking-[0.18em] opacity-60">
             Next alarm
@@ -213,7 +149,7 @@ export default function HomeScreen() {
 
         <Link
           href="/alarm"
-          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-current/20 bg-white/30 px-5 text-sm font-medium backdrop-blur transition hover:bg-white/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
+          className="mt-5 inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-white/10 px-5 text-sm font-medium backdrop-blur transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-current"
         >
           Open alarm page
         </Link>

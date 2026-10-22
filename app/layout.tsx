@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import AuroraBackground from "./aurora-background";
 import AlarmController from "./alarm-controller";
 import "./globals.css";
 
@@ -25,8 +26,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AlarmController />
-        {children}
+        <AuroraBackground />
+        <div className="app-content">
+          <AlarmController />
+          {children}
+        </div>
       </body>
     </html>
   );

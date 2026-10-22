@@ -9,6 +9,12 @@ import {
   readAlarmSettings,
   saveAlarmSettings,
 } from "@/lib/alarm";
+import {
+  DEFAULT_BACKGROUND_SETTINGS,
+  type BackgroundSettings,
+  readBackgroundSettings,
+  saveBackgroundSettings,
+} from "@/lib/background";
 
 const repeatDayOptions = [
   { label: "Sun", value: 0 },
@@ -45,6 +51,11 @@ export default function SettingsScreen() {
   const [loadError, setLoadError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+  const [backgroundSettings, setBackgroundSettings] = useState(
+    DEFAULT_BACKGROUND_SETTINGS,
+  );
+  const [backgroundError, setBackgroundError] = useState("");
+  const [backgroundMessage, setBackgroundMessage] = useState("");
 
   useEffect(() => {
     const frameId = window.requestAnimationFrame(() => {
@@ -61,10 +72,36 @@ export default function SettingsScreen() {
       } finally {
         setIsLoading(false);
       }
+
+      try {
+        setBackgroundSettings(readBackgroundSettings());
+      } catch {
+        setBackgroundError(
+          "Background settings could not be loaded. Change a control to save new settings.",
+        );
+      }
     });
 
     return () => window.cancelAnimationFrame(frameId);
   }, []);
+
+  function updateBackgroundSettings(
+    updates: Partial<BackgroundSettings>,
+  ) {
+    const nextSettings = { ...backgroundSettings, ...updates };
+    setBackgroundError("");
+    setBackgroundMessage("");
+
+    try {
+      saveBackgroundSettings(nextSettings);
+      setBackgroundSettings(nextSettings);
+      setBackgroundMessage("Background appearance saved on this device.");
+    } catch {
+      setBackgroundError(
+        "Background appearance could not be saved. Check that browser storage is available, then try again.",
+      );
+    }
+  }
 
   function toggleRepeatDay(day: number) {
     setAlarm((currentAlarm) => ({
@@ -94,20 +131,11 @@ export default function SettingsScreen() {
   }
 
   return (
-    <main className="relative isolate min-h-svh overflow-hidden bg-gradient-to-br from-amber-100 via-orange-50 to-rose-100 text-slate-900">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-1/4 -z-10 size-96 rounded-full bg-orange-300/30 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-48 -right-24 -z-10 size-[30rem] rounded-full bg-rose-300/30 blur-3xl"
-      />
-
+    <main className="relative min-h-svh overflow-hidden text-slate-50">
       <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-5 sm:px-8 sm:py-8">
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center gap-3 rounded-full pr-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
+          className="inline-flex min-h-11 items-center gap-3 rounded-full pr-3 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           <span
             aria-hidden="true"
@@ -121,7 +149,7 @@ export default function SettingsScreen() {
         </Link>
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center rounded-full border border-slate-900/15 bg-white/40 px-4 text-sm font-medium backdrop-blur transition hover:bg-white/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
+          className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-white/10 px-4 text-sm font-medium backdrop-blur transition hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
           Back to clock
         </Link>
@@ -129,13 +157,13 @@ export default function SettingsScreen() {
 
       <section className="mx-auto w-full max-w-3xl px-5 pb-12 sm:px-8 sm:pb-16">
         <div className="mb-7">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
             Make it yours
           </p>
           <h1 className="mt-2 text-3xl font-medium tracking-tight sm:text-4xl">
             Alarm settings
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-700 sm:text-base">
+          <p className="mt-2 max-w-xl text-sm leading-6 text-slate-200 sm:text-base">
             Choose when your alarm rings and the kind of puzzle that starts your
             morning.
           </p>
@@ -143,7 +171,7 @@ export default function SettingsScreen() {
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-6 rounded-[2rem] border border-white/70 bg-white/65 p-5 shadow-sm backdrop-blur-md sm:p-8"
+          className="space-y-6 rounded-[2rem] border border-white/70 bg-white/85 p-5 text-slate-900 shadow-sm backdrop-blur-md sm:p-8"
         >
           {loadError && (
             <p
@@ -305,6 +333,143 @@ export default function SettingsScreen() {
               className="size-6 shrink-0 cursor-pointer accent-slate-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-900"
             />
           </div>
+
+          <fieldset className="space-y-4 rounded-2xl border border-slate-900/10 bg-white/55 p-4 sm:p-5">
+            <div>
+              <legend className="text-sm font-semibold">
+                Background appearance
+              </legend>
+              <p className="mt-1 text-sm leading-5 text-slate-600">
+                Choose the background and aurora colors. Your changes apply
+                immediately and are saved on this device.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label
+                htmlFor="background-color"
+                className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-900/10 bg-white/75 px-4 py-2"
+              >
+                <span className="text-sm font-medium">Background color</span>
+                <input
+                  id="background-color"
+                  name="background-color"
+                  type="color"
+                  value={backgroundSettings.backgroundColor}
+                  onChange={(event) =>
+                    updateBackgroundSettings({
+                      backgroundColor: event.target.value,
+                    })
+                  }
+                  className="size-11 cursor-pointer rounded-lg border-0 bg-transparent p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                />
+              </label>
+
+              <label
+                htmlFor="orb-color"
+                className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-slate-900/10 bg-white/75 px-4 py-2"
+              >
+                <span className="text-sm font-medium">Aurora orb color</span>
+                <input
+                  id="orb-color"
+                  name="orb-color"
+                  type="color"
+                  value={backgroundSettings.orbColor}
+                  onChange={(event) =>
+                    updateBackgroundSettings({ orbColor: event.target.value })
+                  }
+                  className="size-11 cursor-pointer rounded-lg border-0 bg-transparent p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+                />
+              </label>
+            </div>
+
+            <div>
+              <label
+                htmlFor="orb-opacity"
+                className="flex items-center justify-between gap-3 text-sm font-medium"
+              >
+                <span>Orb opacity</span>
+                <span>{backgroundSettings.orbOpacity}%</span>
+              </label>
+              <input
+                id="orb-opacity"
+                name="orb-opacity"
+                type="range"
+                min="0"
+                max="100"
+                step="5"
+                value={backgroundSettings.orbOpacity}
+                aria-valuetext={`${backgroundSettings.orbOpacity}% opacity`}
+                aria-describedby="orb-opacity-description"
+                onChange={(event) =>
+                  updateBackgroundSettings({
+                    orbOpacity: event.target.valueAsNumber,
+                  })
+                }
+                className="mt-2 min-h-8 w-full cursor-pointer accent-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              />
+              <p
+                id="orb-opacity-description"
+                className="text-xs leading-5 text-slate-600"
+              >
+                Adjusts the transparency of all the large and small orbs.
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="orb-speed"
+                className="flex items-center justify-between gap-3 text-sm font-medium"
+              >
+                <span>Orb movement speed</span>
+                <span>{backgroundSettings.orbSpeed}%</span>
+              </label>
+              <input
+                id="orb-speed"
+                name="orb-speed"
+                type="range"
+                min="50"
+                max="200"
+                step="10"
+                value={backgroundSettings.orbSpeed}
+                aria-valuetext={`${backgroundSettings.orbSpeed}% speed`}
+                aria-describedby="orb-speed-description"
+                onChange={(event) =>
+                  updateBackgroundSettings({
+                    orbSpeed: event.target.valueAsNumber,
+                  })
+                }
+                className="mt-2 min-h-8 w-full cursor-pointer accent-violet-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              />
+              <p
+                id="orb-speed-description"
+                className="text-xs leading-5 text-slate-600"
+              >
+                Lower is slower; higher is faster. The default is 100%.
+              </p>
+            </div>
+
+            {backgroundError && (
+              <p role="alert" className="text-sm font-medium text-rose-900">
+                {backgroundError}
+              </p>
+            )}
+            {backgroundMessage && (
+              <p role="status" className="text-sm font-medium text-emerald-900">
+                {backgroundMessage}
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() =>
+                updateBackgroundSettings(DEFAULT_BACKGROUND_SETTINGS)
+              }
+              className="inline-flex min-h-10 items-center justify-center rounded-full border border-slate-900/15 bg-white/75 px-4 text-sm font-semibold text-slate-800 transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+            >
+              Reset background
+            </button>
+          </fieldset>
 
           <aside className="rounded-2xl border border-amber-900/10 bg-amber-100/70 px-4 py-4">
             <p className="text-sm font-semibold">A note about web alarms</p>

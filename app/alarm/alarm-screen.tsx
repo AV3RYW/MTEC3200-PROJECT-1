@@ -420,16 +420,7 @@ export default function AlarmScreen() {
   const previewPuzzle = puzzles.medium[previewPuzzleIndex];
 
   return (
-    <main className="relative isolate flex min-h-svh flex-col overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-slate-50">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -left-32 top-1/4 -z-10 size-96 rounded-full bg-indigo-500/20 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-48 -right-24 -z-10 size-[30rem] rounded-full bg-amber-400/10 blur-3xl"
-      />
-
+    <main className="relative flex min-h-svh flex-col overflow-hidden text-slate-50">
       <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-5 sm:px-8 sm:py-8">
         <span className="text-sm font-semibold tracking-[0.16em]">
           PUZZLE ALARM
